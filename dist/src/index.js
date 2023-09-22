@@ -30,6 +30,8 @@ const express_1 = __importDefault(require("express"));
 const socket_io_1 = require("socket.io");
 const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
+require("reflect-metadata");
+const morgan_1 = __importDefault(require("morgan"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const group_routes_1 = __importDefault(require("./routes/group.routes"));
 const transaction_routes_1 = __importDefault(require("./routes/transaction.routes"));
@@ -57,9 +59,14 @@ const io = new socket_io_1.Server(server, {
 userController.setIo(io);
 groupController.setIo(io);
 transactionController.setIo(io);
-// Middleware para procesar JSON
+// Middleware to process JSON
 app.use(express_1.default.json());
-// Uso de las rutas
+app.use((0, morgan_1.default)('dev'));
+app.use((req, res, next) => {
+    console.log('Body:', req.body);
+    next();
+});
+// Routes
 app.use('/api/users', user_routes_1.default);
 app.use('/api/groups', group_routes_1.default);
 app.use('/api/transactions', transaction_routes_1.default);
@@ -76,5 +83,4 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('User disconnected');
     });
-    // Aquí puedes agregar otros eventos a escuchar y responder.
 });

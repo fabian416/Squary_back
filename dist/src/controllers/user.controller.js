@@ -9,10 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.register = exports.authenticate = exports.setIo = void 0;
+exports.getWalletAddressesByAliases = exports.register = exports.authenticate = exports.setIo = void 0;
 const user_model_1 = require("../models/user.model");
-const database_1 = require("../database"); // Ajusta esta ruta según donde hayas colocado tu archivo database.ts
+const database_1 = require("../database");
+const typeorm_1 = require("typeorm");
 let io;
+const isAliasFormatCorrect = (alias) => {
+    return alias.startsWith("@") && alias.length > 3;
+};
 const setIo = (socketIo) => {
     io = socketIo;
 };
@@ -39,6 +43,10 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     if (!walletAddress || !alias) {
         return res.status(400).send({ message: 'Los campos walletAddress y alias son obligatorios.' });
     }
+    // check de alias format
+    if (!isAliasFormatCorrect(alias)) {
+        return res.status(400).send({ message: 'El formato del alias es incorrecto.' });
+    }
     try {
         let user = yield database_1.AppDataSource.manager.findOne(user_model_1.User, { where: { walletAddress: walletAddress } });
         if (!user) {
@@ -59,3 +67,28 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.register = register;
+const getWalletAddressesByAliases = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const aliases = req.query.aliases;
+    if (!aliases || !aliases.length) {
+        return res.status(400).send({ error: "No se proporcionaron alias." });
+    }
+    // Validar cada alias
+    for (const alias of aliases) {
+        if (!isAliasFormatCorrect(alias)) {
+            return res.status(400).send({ message: `El formato del alias ${alias} es incorrecto.` });
+        }
+    }
+    try {
+        const users = yield user_model_1.User.find({ where: { alias: (0, typeorm_1.In)(aliases) } });
+        const result = {};
+        for (const user of users) {
+            result[user.alias] = user.walletAddress;
+        }
+        return res.send(result);
+    }
+    catch (error) {
+        console.error("Error al obtener direcciones de billetera:", error);
+        return res.status(500).send({ error: "Error del servidor." });
+    }
+});
+exports.getWalletAddressesByAliases = getWalletAddressesByAliases;

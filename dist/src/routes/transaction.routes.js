@@ -31,5 +31,4 @@ const transactionController = __importStar(require("../controllers/transaction.c
 const router = express_1.default.Router();
 router.post('/create', transactionController.createTransaction);
 router.get('/:groupId', transactionController.getAllTransactionsForGroup);
-// Añade más rutas según lo necesites: actualizar transacciones, eliminar transacciones, etc.
 exports.default = router;

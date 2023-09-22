@@ -12,12 +12,11 @@ export const createTransaction = async (req: Request, res: Response) => {
     const transaction = new Transaction();
     transaction.amount = req.body.amount;
     transaction.description = req.body.description;
-    // ... otros campos que necesites
-    
+
     try {
         const savedTransaction = await AppDataSource.manager.save(Transaction, transaction);
         
-        // Emitir un evento cuando una transacción es creada
+        //  Emit an event when a new transaction is created
         io.emit('transactionCreated', savedTransaction);
         res.status(200).send(savedTransaction);
     } catch (err) {
@@ -34,7 +33,7 @@ export const getAllTransactionsForGroup = async (req: Request, res: Response) =>
 
     try {
         const groupIdNumber = parseInt(groupId, 10);
-        const transactions = await AppDataSource.manager.find(Transaction, { where: { group: { id: groupIdNumber } } });
+        const transactions = await AppDataSource.manager.find(Transaction, { where: { toGroup: { id: groupIdNumber } } });
 
         if (!transactions.length) {
             return res.status(404).send({ message: 'No se encontraron transacciones para el groupId proporcionado.' });
@@ -47,4 +46,3 @@ export const getAllTransactionsForGroup = async (req: Request, res: Response) =>
     }
 };
 
-// ... puedes añadir más funciones como eliminar, actualizar transacciones, etc.

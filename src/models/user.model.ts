@@ -2,12 +2,14 @@ import { Entity, PrimaryColumn, Column, BaseEntity, ManyToMany, JoinTable, OneTo
 import { Group } from './group.model'; 
 import { Transaction } from './transaction.model';
 
+
 @Entity('users')  // Define the table asociety in PostgreSQL
+
 export class User extends BaseEntity {
 
-    @PrimaryColumn({ type: 'varchar', unique: true })
+    @PrimaryColumn({ type: 'varchar', unique: true, name: "walletAddress" })
     walletAddress: string;   //  The unique address of the wallet's user
-
+    
     @Column({ type: 'varchar', unique: true })
     alias: string;          //the alias/nickname of the user.
 
@@ -28,8 +30,16 @@ export class User extends BaseEntity {
     groups: Group[];
 
     //  Relation with transactions created by the user
-    @OneToMany(() => Transaction, transaction => transaction.createdBy)
-    transactionsCreated: Transaction[];
+    @OneToMany(() => Transaction, transaction => transaction.proposedBy)
+    transactionsProposed: Transaction[];
 
-    // Si necesitas agregar más campos o configuraciones, simplemente agregas más decoradores @Column.
+    // Relation with transactions signed by the user
+    @ManyToMany(() => Transaction, transaction => transaction.signers)
+    signedTransactions: Transaction[];
+   
+
+    // Relation with transactions received by the user
+    @OneToMany(() => Transaction, transaction => transaction.receiver)
+    transactionsReceived: Transaction[];
+
 }

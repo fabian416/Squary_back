@@ -4,6 +4,8 @@ import { AppDataSource } from "./database";
 import { Server } from 'socket.io';
 import http from 'http';
 import cors from 'cors';
+import 'reflect-metadata';
+import  morgan  from 'morgan';
 
 import userRoutes from './routes/user.routes';
 import groupRoutes from './routes/group.routes';
@@ -19,6 +21,7 @@ dotenv.config();
 
 const app: Express = express();
 const server = http.createServer(app);
+
 
 //Configuration of CORS for Express
 const corsOptions = {
@@ -40,10 +43,18 @@ userController.setIo(io);
 groupController.setIo(io);
 transactionController.setIo(io);
 
-// Middleware para procesar JSON
+// Middleware to process JSON
 app.use(express.json());
 
-// Uso de las rutas
+app.use(morgan('dev'));
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+    console.log('Body:', req.body);
+    next();
+});
+
+
+// Routes
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/transactions', transactionRoutes);
@@ -66,5 +77,4 @@ io.on('connection', (socket) => {
         console.log('User disconnected');
     });
 
-    // Aquí puedes agregar otros eventos a escuchar y responder.
 });

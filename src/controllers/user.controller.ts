@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user.model';
-import { AppDataSource } from "../database"; // Ajusta esta ruta según donde hayas colocado tu archivo database.ts
-
+import { AppDataSource } from "../database"; 
+import { In } from 'typeorm';
 let io: any;
+
+const isAliasFormatCorrect = (alias: string) => {
+    return alias.startsWith("@") && alias.length > 3;
+};
 
 export const setIo = (socketIo: any) => {
     io = socketIo;
@@ -31,6 +35,10 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     if (!walletAddress || !alias) {
         return res.status(400).send({ message: 'Los campos walletAddress y alias son obligatorios.' });
     }
+     // check de alias format
+     if (!isAliasFormatCorrect(alias)) {
+        return res.status(400).send({ message: 'El formato del alias es incorrecto.' });
+    }
 
     try {
         let user = await AppDataSource.manager.findOne(User, { where: { walletAddress: walletAddress } });
@@ -50,4 +58,36 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         next(err);
     }
 };
+
+export const getWalletAddressesByAliases = async (req: Request, res: Response) => {
+    const aliases = req.query.aliases as string[];
+
+    if (!aliases || !aliases.length) {
+        return res.status(400).send({ error: "No se proporcionaron alias." });
+    }
+
+    // Validar cada alias
+    for (const alias of aliases) {
+        if (!isAliasFormatCorrect(alias)) {
+            return res.status(400).send({ message: `El formato del alias ${alias} es incorrecto.` });
+        }
+    }
+
+    try {
+        
+        const users = await User.find({ where: { alias: In(aliases) } });
+        const result: Record<string, string> = {};
+
+        for (const user of users) {
+            result[user.alias] = user.walletAddress;
+        }
+
+        return res.send(result);
+    } catch (error) {
+        console.error("Error al obtener direcciones de billetera:", error);
+        return res.status(500).send({ error: "Error del servidor." });
+    }
+};
+
+
 

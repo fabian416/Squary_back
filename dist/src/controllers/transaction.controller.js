@@ -21,10 +21,9 @@ const createTransaction = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const transaction = new transaction_model_1.Transaction();
     transaction.amount = req.body.amount;
     transaction.description = req.body.description;
-    // ... otros campos que necesites
     try {
         const savedTransaction = yield database_1.AppDataSource.manager.save(transaction_model_1.Transaction, transaction);
-        // Emitir un evento cuando una transacción es creada
+        //  Emit an event when a new transaction is created
         io.emit('transactionCreated', savedTransaction);
         res.status(200).send(savedTransaction);
     }
@@ -40,7 +39,7 @@ const getAllTransactionsForGroup = (req, res) => __awaiter(void 0, void 0, void 
     }
     try {
         const groupIdNumber = parseInt(groupId, 10);
-        const transactions = yield database_1.AppDataSource.manager.find(transaction_model_1.Transaction, { where: { group: { id: groupIdNumber } } });
+        const transactions = yield database_1.AppDataSource.manager.find(transaction_model_1.Transaction, { where: { toGroup: { id: groupIdNumber } } });
         if (!transactions.length) {
             return res.status(404).send({ message: 'No se encontraron transacciones para el groupId proporcionado.' });
         }
@@ -52,4 +51,3 @@ const getAllTransactionsForGroup = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.getAllTransactionsForGroup = getAllTransactionsForGroup;
-// ... puedes añadir más funciones como eliminar, actualizar transacciones, etc.

@@ -25,8 +25,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const groupController = __importStar(require("../controllers/group.controller"));
+const group_controller_1 = require("../controllers/group.controller");
 const router = (0, express_1.Router)();
 router.post('/create', groupController.createGroup);
 router.get('/:address/groups', groupController.getUserGroups);
-// Añade más rutas según lo necesites: obtener grupos, actualizar grupos, eliminar grupos, etc.
+router.post('/api/gnosis/deploy', group_controller_1.deployGnosisSafe);
 exports.default = router;
