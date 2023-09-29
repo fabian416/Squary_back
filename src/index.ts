@@ -30,7 +30,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-//Configuring CORS for Socket.io
+//Configuration CORS for Socket.io
 const io = new Server(server, {
     cors: {
         origin: 'http://localhost:3000',

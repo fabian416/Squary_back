@@ -9,12 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserGroups = exports.deployGnosisSafe = exports.createGroup = exports.setIo = void 0;
+exports.getUserGroups = exports.createGroup = exports.setIo = void 0;
 const group_model_1 = require("../models/group.model");
 const user_model_1 = require("../models/user.model");
 const pendingInvitation_model_1 = require("../models/pendingInvitation.model");
 const database_1 = require("../database");
-const gnosis_config_1 = require("../../gnosis.config");
 let io;
 const setIo = (socketIo) => {
     io = socketIo;
@@ -74,6 +73,7 @@ const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.status(200).send({
             message: "Grupo creado con éxito.",
             data: savedGroup,
+            groupId: savedGroup.id
         });
     }
     catch (error) {
@@ -84,32 +84,6 @@ const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.createGroup = createGroup;
-const deployGnosisSafe = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const signedTransaction = req.body.signedTransaction;
-    try {
-        const txResponse = yield gnosis_config_1.provider.sendTransaction(signedTransaction);
-        const receipt = yield txResponse.wait();
-        const safeAddress = receipt.contractAddress;
-        // const groupToUpdate = await Group.findOne(groupId); // Asume que tienes algún método para identificar qué grupo estás actualizando, como un groupId.
-        //if (groupToUpdate) {
-        //  groupToUpdate.status = 'active';
-        //groupToUpdate.gnosissafeaddress = safeAddress;
-        //await groupToUpdate.save();}
-        // Aquí, puedes hacer cosas adicionales como guardar la dirección del Gnosis Safe en la base de datos
-        // ...
-        res.status(200).send({
-            message: "Gnosis Safe desplegado con éxito.",
-            safeAddress: safeAddress
-        });
-    }
-    catch (error) {
-        console.error("Error al desplegar el Gnosis Safe:", error);
-        res.status(500).send({
-            message: "Error al desplegar el Gnosis Safe.",
-        });
-    }
-});
-exports.deployGnosisSafe = deployGnosisSafe;
 const getUserGroups = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userWalletAddress = req.params.address;
     try {

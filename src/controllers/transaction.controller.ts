@@ -28,7 +28,7 @@ export const getAllTransactionsForGroup = async (req: Request, res: Response) =>
     const groupId = req.params.groupId;
 
     if (!groupId) {
-        return res.status(400).send({ message: 'No se proporcionó un groupId válido.' });
+        return res.status(400).send({ message: 'A valid groupId was not provided.' });
     }
 
     try {
@@ -36,13 +36,13 @@ export const getAllTransactionsForGroup = async (req: Request, res: Response) =>
         const transactions = await AppDataSource.manager.find(Transaction, { where: { toGroup: { id: groupIdNumber } } });
 
         if (!transactions.length) {
-            return res.status(404).send({ message: 'No se encontraron transacciones para el groupId proporcionado.' });
+            return res.status(404).send({ message: 'No transactions found for the provided groupId ' });
         }
 
         return res.status(200).send(transactions);
     } catch (err) {
-        console.error('Error al obtener las transacciones:', err);
-        return res.status(500).send({ message: 'Hubo un error al obtener las transacciones.' });
+        console.error('Error getting transactions:', err);
+        return res.status(500).send({ message: 'There was an error getting the transactions.' });
     }
 };
 

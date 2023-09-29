@@ -47,9 +47,10 @@ export class Group extends BaseEntity {
 
     @Column('varchar', { name: "signing_method", default: 'majority' }) // 'majority', 'all', 'custom'
     signingMethod: string;
-
-    @Column('simple-array', {name: "selected_signers", nullable: true }) // Save addresses 
+    
+    @Column('text', {name: "selected_signers", nullable: true, array: true }) // Save addresses 
     selectedSigners: string[];
+
 
     @Column('int', { name: 'signature_threshold', nullable: true })
     signatureThreshold: number;

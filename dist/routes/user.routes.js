@@ -24,8 +24,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const groupController = __importStar(require("../controllers/group.controller"));
+const userController = __importStar(require("../controllers/user.controller"));
 const router = (0, express_1.Router)();
-router.post('/create', groupController.createGroup);
-router.get('/:address/groups', groupController.getUserGroups);
+router.post('/authenticate', userController.authenticate);
+router.post('/register', userController.register);
+router.get('/aliases-to-addresses', userController.getWalletAddressesByAliases);
 exports.default = router;

@@ -28,4 +28,5 @@ const groupController = __importStar(require("../controllers/group.controller"))
 const router = (0, express_1.Router)();
 router.post('/create', groupController.createGroup);
 router.get('/:address/groups', groupController.getUserGroups);
+router.post('/updateGnosisAddress', groupController.updateGnosisSafeAddress);
 exports.default = router;

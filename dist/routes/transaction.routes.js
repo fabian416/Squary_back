@@ -22,10 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const groupController = __importStar(require("../controllers/group.controller"));
-const router = (0, express_1.Router)();
-router.post('/create', groupController.createGroup);
-router.get('/:address/groups', groupController.getUserGroups);
+const express_1 = __importDefault(require("express"));
+const transactionController = __importStar(require("../controllers/transaction.controller"));
+const router = express_1.default.Router();
+router.post('/create', transactionController.createTransaction);
+router.get('/:groupId', transactionController.getAllTransactionsForGroup);
 exports.default = router;

@@ -24,7 +24,7 @@ AppDataSource.initialize()
         console.log("Data Source ha sido inicializado!")
         
         const currentDb = await AppDataSource.query("SELECT current_database();");
-        console.log("Conectado a la base de datos:", currentDb[0].current_database); // Deberías acceder al primer resultado y a la propiedad correcta.
+        console.log("Conectado a la base de datos:", currentDb[0].current_database); // You should access the first result and the correct property.
     })
     .catch((err) => {
         console.error("Error durante la inicialización de Data Source", err)

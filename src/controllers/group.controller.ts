@@ -3,127 +3,113 @@ import { Group } from '../models/group.model';
 import { User } from '../models/user.model';
 import { PendingInvitation } from '../models/pendingInvitation.model';
 import { AppDataSource } from "../database"; 
-import { getEthersAdapter, provider } from '../../gnosis.config';
-import { SafeFactory } from '@safe-global/protocol-kit';
+import { In } from 'typeorm'; 
 
 let io: any;
 
 export const setIo = (socketIo: any) => {
     io = socketIo;
 };
-
 export const createGroup = async (req: Request, res: Response) => {
-    let { name, description, invitees, owner, signingMethod, selectedSigners, signatureThreshold } = req.body;
+    let { name, description, invitees, owner, signingMethod, selected_signers, signatureThreshold } = req.body;
 
-    if (typeof selectedSigners === 'string') {
-        selectedSigners = selectedSigners.split(',');
+    const walletAddresses = invitees.map((inv: any) => inv.walletAddress);
+    const allUsers = await AppDataSource.manager.find(User, { where: { walletAddress: In([owner, ...walletAddresses]) } });
+    const usersByWallet = Object.fromEntries(allUsers.map(user => [user.walletAddress, user]));
+
+    if (!usersByWallet[owner]) {
+        return res.status(404).send({ message: "The user doesn't exist" });
     }
 
-    let selectedSignersList = [];
+    const groupMembersSet = new Set([owner]);
 
-    console.log(req.body);
+    const group = new Group();
+    group.name = name;
+    group.description = description;
+    group.owner = usersByWallet[owner];
 
-    if (!['majority', 'all', 'custom'].includes(signingMethod)) {
-        return res.status(400).send({ message: "Método de firma no válido." });
+    // Save the goup before process the pending invitations 
+    const savedGroup = await AppDataSource.manager.save(Group, group);
+
+    for (const invitee of invitees) {
+        if (usersByWallet[invitee.walletAddress]) {
+            groupMembersSet.add(invitee.walletAddress);
+        } else if (invitee.email) {
+            const newInvitation = new PendingInvitation();
+            newInvitation.group = savedGroup;
+            newInvitation.walletAddress = invitee.walletAddress;
+            newInvitation.email = invitee.email;
+            await AppDataSource.manager.save(PendingInvitation, newInvitation);
+        }
     }
 
-    try {
-        const user = await AppDataSource.manager.findOne(User, { where: { walletAddress: owner } });
-        console.log(user);
-        if (!user) {
-            return res.status(404).send({ message: "The user doesn't exist" });
-        }
-        selectedSignersList.push(user.walletAddress);
+    group.members = [...groupMembersSet].map(wallet => usersByWallet[wallet]);
+    group.signingMethod = signingMethod;
+    group.selectedSigners = selected_signers;
 
-        const group = new Group();
-        group.name = name;
-        group.description = description;
-        group.owner = user;
-        group.members = [user];
-        group.signingMethod = signingMethod;
-
-        for (const invitee of invitees) {
-            const invitedUser = await AppDataSource.manager.findOne(User, { where: { walletAddress: invitee.walletAddress } });
-            if (invitedUser) {
-                group.members.push(invitedUser);
-                selectedSignersList.push(invitedUser.walletAddress);
-            } else {
-                const newInvitation = new PendingInvitation();
-                newInvitation.group = group;
-                newInvitation.walletAddress = invitee.walletAddress;
-                newInvitation.email = invitee.email;
-                await AppDataSource.manager.save(PendingInvitation, newInvitation);
-            }
-        }
-
-        if (signingMethod === 'majority') {
-            group.signatureThreshold = Math.floor(group.members.length / 2) + 1;
-        } else if (signingMethod === 'all') {
-            group.signatureThreshold = group.members.length;
-        } else {
-            group.selectedSigners = selectedSigners;
+    if (signingMethod === 'majority') {
+        group.signatureThreshold = Math.floor(selected_signers.length / 2) + 1;
+    } else if (signingMethod === 'all') {
+        group.signatureThreshold = selected_signers.length;
+    } else { // Assuming this case is 'customize'
+        if (signatureThreshold >= 1 && signatureThreshold <= selected_signers.length) {
             group.signatureThreshold = signatureThreshold;
+        } else {
+            return res.status(400).send({ message: "The value to signatureThreshold is incorrect" });
         }
-        
-        if (signingMethod !== 'custom') {
-            group.selectedSigners = selectedSignersList;
-        }
-
-        const savedGroup = await AppDataSource.manager.save(Group, group);
-
-        res.status(200).send({
-            message: "Grupo creado con éxito.",
-            data: savedGroup,
-        });
-
-    } catch (error) {
-        console.error("Error al guardar el grupo:", error);
-        res.status(500).send({
-            message: "Error al crear el grupo.",
-        });
     }
-};
-
-export const deployGnosisSafe = async (req: Request, res: Response) => {
-    const signedTransaction = req.body.signedTransaction;
 
     try {
-        const txResponse = await provider.sendTransaction(signedTransaction);
-        const receipt = await txResponse.wait();
-        const safeAddress = receipt.contractAddress;
-
-       // const groupToUpdate = await Group.findOne(groupId); // Asume que tienes algún método para identificar qué grupo estás actualizando, como un groupId.
-        //if (groupToUpdate) {
-          //  groupToUpdate.status = 'active';
-            //groupToUpdate.gnosissafeaddress = safeAddress;
-            //await groupToUpdate.save();}
-
-
-        // Aquí, puedes hacer cosas adicionales como guardar la dirección del Gnosis Safe en la base de datos
-        // ...
-
+        await AppDataSource.manager.save(Group, group);
         res.status(200).send({
-            message: "Gnosis Safe desplegado con éxito.",
-            safeAddress: safeAddress
+            message: "Group created Succesfully",
+            data: group,
+            groupId: group.id
         });
     } catch (error) {
-        console.error("Error al desplegar el Gnosis Safe:", error);
+        console.error("Error to save the Group:", error);
         res.status(500).send({
-            message: "Error al desplegar el Gnosis Safe.",
+            message: "Error to create the Group.",
         });
     }
 };
+
+export const updateGnosisSafeAddress = async (req: Request, res: Response) => {
+    const { groupId, gnosissafeaddress } = req.body;
+
+    try {
+        const group = await AppDataSource.manager.findOne(Group, { where: { id: groupId } });
+        
+        if (!group) {
+            return res.status(404).send({ message: "Group not found." });
+        }
+
+        group.gnosissafeaddress = gnosissafeaddress;
+        group.status = 'active';
+        
+        await AppDataSource.manager.save(Group, group);
+
+        res.status(200).send({ message: "Gnosis Safe address updated successfully." });
+
+    } catch (error) {
+        console.error("Error updating Gnosis Safe address:", error);
+        res.status(500).send({ message: "Error updating Gnosis Safe address."});
+    }
+};
+
 
 export const getUserGroups = async (req: Request, res: Response) => {
     const userWalletAddress = req.params.address;
 
     try {
-        // Finding groups based on the owner's wallet address
-        const groups = await AppDataSource.manager.find(Group, { where: { owner: { walletAddress: userWalletAddress } } });
+        const groups = await AppDataSource.manager
+            .createQueryBuilder(Group, "group")
+            .innerJoinAndSelect("group.owner", "owner", "owner.walletAddress = :walletAddress", { walletAddress: userWalletAddress })
+            .getMany();
 
         res.status(200).send(groups);
     } catch (error) {
-        console.error("Error al obtener los grupos:", error);
+        console.error("Error to get the Groups:", error);
         res.status(500).send(error);
     }
 };

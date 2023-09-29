@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEthersAdapter = exports.provider = void 0;
+exports.getReadOnlyEthersAdapter = exports.getEthersAdapter = exports.provider = void 0;
 const ethers_1 = require("ethers");
 const protocol_kit_1 = require("@safe-global/protocol-kit");
 // Conexión al proveedor
@@ -15,3 +15,10 @@ function getEthersAdapter(userPrivateKey) {
     });
 }
 exports.getEthersAdapter = getEthersAdapter;
+function getReadOnlyEthersAdapter() {
+    return new protocol_kit_1.EthersAdapter({
+        ethers: ethers_1.ethers,
+        signerOrProvider: exports.provider
+    });
+}
+exports.getReadOnlyEthersAdapter = getReadOnlyEthersAdapter;

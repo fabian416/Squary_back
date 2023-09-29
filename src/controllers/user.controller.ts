@@ -19,12 +19,12 @@ export const authenticate = async (req: Request, res: Response) => {
         const user = await AppDataSource.manager.findOne(User, { where: { walletAddress: walletAddress } });
         
         if (user) {
-            res.status(200).send({ message: 'Usuario autenticado exitosamente', user: user });
+            res.status(200).send({ message: 'User successfully authenticated', user: user });
         } else {
-            res.status(200).send({ message: 'Usuario no registrado', user: null });
+            res.status(200).send({ message: 'Unregistered user', user: null });
         }
     } catch (err) {
-        console.error("Error al registrar usuario:", err);
+        console.error("Error registering user:", err);
         res.status(500).send(err);
     }
 };
@@ -33,11 +33,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const { walletAddress, alias, email } = req.body;
 
     if (!walletAddress || !alias) {
-        return res.status(400).send({ message: 'Los campos walletAddress y alias son obligatorios.' });
+        return res.status(400).send({ message: 'The walletAddress and alias fields are required.' });
     }
      // check de alias format
      if (!isAliasFormatCorrect(alias)) {
-        return res.status(400).send({ message: 'El formato del alias es incorrecto.' });
+        return res.status(400).send({ message: 'The alias format is incorrect' });
     }
 
     try {
@@ -49,12 +49,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             user.alias = alias;
             user.email = email;
             await AppDataSource.manager.save(User, user);
-            res.status(201).send({ message: 'Usuario registrado exitosamente', user: user });
+            res.status(201).send({ message: 'Successfully registered user', user: user });
         } else {
-            res.status(400).send({ message: 'El usuario ya existe' });
+            res.status(400).send({ message: 'User already exits' });
         }
     } catch (err) {
-        console.error("Error al registrar el usuario:", err);
+        console.error("Error registering use", err);
         next(err);
     }
 };
@@ -63,13 +63,13 @@ export const getWalletAddressesByAliases = async (req: Request, res: Response) =
     const aliases = req.query.aliases as string[];
 
     if (!aliases || !aliases.length) {
-        return res.status(400).send({ error: "No se proporcionaron alias." });
+        return res.status(400).send({ error: "No aliases were provided" });
     }
 
     // Validar cada alias
     for (const alias of aliases) {
         if (!isAliasFormatCorrect(alias)) {
-            return res.status(400).send({ message: `El formato del alias ${alias} es incorrecto.` });
+            return res.status(400).send({ message: `Alias format ${alias} is incorrect` });
         }
     }
 
@@ -84,8 +84,8 @@ export const getWalletAddressesByAliases = async (req: Request, res: Response) =
 
         return res.send(result);
     } catch (error) {
-        console.error("Error al obtener direcciones de billetera:", error);
-        return res.status(500).send({ error: "Error del servidor." });
+        console.error("Error getting wallet addresses:", error);
+        return res.status(500).send({ error: "Error from the server" });
     }
 };
 
