@@ -99,12 +99,15 @@ export const updateGnosisSafeAddress = async (req: Request, res: Response) => {
 
 
 export const getUserGroups = async (req: Request, res: Response) => {
+    console.log("getUserGroups called with address:", req.params.address);
     const userWalletAddress = req.params.address;
 
     try {
+        // Usamos el mismo patrón que en otras partes del código
         const groups = await AppDataSource.manager
             .createQueryBuilder(Group, "group")
-            .innerJoinAndSelect("group.owner", "owner", "owner.walletAddress = :walletAddress", { walletAddress: userWalletAddress })
+            .where("group.owner_wallet_address = :walletAddress", { walletAddress: userWalletAddress })
+            .orWhere(":walletAddress = ANY(group.selected_signers)", { walletAddress: userWalletAddress })
             .getMany();
 
         res.status(200).send(groups);
@@ -113,3 +116,28 @@ export const getUserGroups = async (req: Request, res: Response) => {
         res.status(500).send(error);
     }
 };
+export const getGroupMembers = async (req: Request, res: Response) => {
+    const groupId = req.params.groupId;
+
+    try {
+        const members = await AppDataSource.manager
+            .createQueryBuilder("users", "u")
+            .innerJoin("groups", "g", "u.walletAddress = ANY(g.selected_signers)")
+            .where("g.id = :groupId", { groupId })
+            .select(["u.walletAddress", "u.alias"])
+            .getRawMany();
+
+        // Adapt the struct of members
+        const adaptedMembers = members.map(member => ({
+            walletAddress: member.u_walletAddress,
+            alias: member.u_alias
+        }));
+
+        res.status(200).send(adaptedMembers);
+    } catch (error) {
+        console.error("Error al obtener los miembros del grupo:", error);
+        res.status(500).send(error);
+    }
+};
+
+

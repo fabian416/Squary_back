@@ -11,10 +11,14 @@ import {
 } from 'typeorm';
 import { User } from './user.model';
 import { Transaction } from './transaction.model';
+import { Debt } from './debt.model';
 import { PendingInvitation } from './pendingInvitation.model';
 
 @Entity('groups')
 export class Group extends BaseEntity {
+    
+    @OneToMany(() => Debt, debt => debt.group)
+    debts: Debt[];
 
     @PrimaryGeneratedColumn()
     id: number;

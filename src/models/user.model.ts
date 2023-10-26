@@ -30,16 +30,12 @@ export class User extends BaseEntity {
     groups: Group[];
 
     //  Relation with transactions created by the user
-    @OneToMany(() => Transaction, transaction => transaction.proposedBy)
+    @OneToMany(() => Transaction, transaction => transaction.proposedby)
     transactionsProposed: Transaction[];
 
     // Relation with transactions signed by the user
     @ManyToMany(() => Transaction, transaction => transaction.signers)
     signedTransactions: Transaction[];
    
-
-    // Relation with transactions received by the user
-    @OneToMany(() => Transaction, transaction => transaction.receiver)
-    transactionsReceived: Transaction[];
 
 }

@@ -4,6 +4,7 @@ import { DataSource } from "typeorm";
 import { User } from "./models/user.model";
 import { Group } from "./models/group.model";
 import { Transaction } from "./models/transaction.model";
+import { Debt } from "./models/debt.model";
 import { PendingInvitation } from "./models/pendingInvitation.model";
 
 dotenv.config();
@@ -15,7 +16,7 @@ export const AppDataSource = new DataSource({
     username: process.env.PG_USER,
     password: process.env.PG_PASSWORD,
     database: process.env.PG_DATABASE,
-    entities: [User, Group, Transaction, PendingInvitation ],
+    entities: [User, Group, Transaction, PendingInvitation, Debt ],
     logging: true 
 });
 

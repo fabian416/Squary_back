@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserGroups = exports.updateGnosisSafeAddress = exports.createGroup = exports.setIo = void 0;
+exports.getGroupMembers = exports.getUserGroups = exports.updateGnosisSafeAddress = exports.createGroup = exports.setIo = void 0;
 const group_model_1 = require("../models/group.model");
 const user_model_1 = require("../models/user.model");
 const pendingInvitation_model_1 = require("../models/pendingInvitation.model");
@@ -33,7 +33,7 @@ const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     group.name = name;
     group.description = description;
     group.owner = usersByWallet[owner];
-    // Guarda el grupo antes de procesar las invitaciones pendientes
+    // Save the goup before process the pending invitations 
     const savedGroup = yield database_1.AppDataSource.manager.save(group_model_1.Group, group);
     for (const invitee of invitees) {
         if (usersByWallet[invitee.walletAddress]) {
@@ -99,10 +99,15 @@ const updateGnosisSafeAddress = (req, res) => __awaiter(void 0, void 0, void 0, 
 });
 exports.updateGnosisSafeAddress = updateGnosisSafeAddress;
 const getUserGroups = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("getUserGroups called with address:", req.params.address);
     const userWalletAddress = req.params.address;
     try {
-        // Finding groups based on the owner's wallet address
-        const groups = yield database_1.AppDataSource.manager.find(group_model_1.Group, { where: { owner: { walletAddress: userWalletAddress } } });
+        // Usamos el mismo patrón que en otras partes del código
+        const groups = yield database_1.AppDataSource.manager
+            .createQueryBuilder(group_model_1.Group, "group")
+            .where("group.owner_wallet_address = :walletAddress", { walletAddress: userWalletAddress })
+            .orWhere(":walletAddress = ANY(group.selected_signers)", { walletAddress: userWalletAddress })
+            .getMany();
         res.status(200).send(groups);
     }
     catch (error) {
@@ -111,3 +116,25 @@ const getUserGroups = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getUserGroups = getUserGroups;
+const getGroupMembers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const groupId = req.params.groupId;
+    try {
+        const members = yield database_1.AppDataSource.manager
+            .createQueryBuilder("users", "u")
+            .innerJoin("groups", "g", "u.walletAddress = ANY(g.selected_signers)")
+            .where("g.id = :groupId", { groupId })
+            .select(["u.walletAddress", "u.alias"])
+            .getRawMany();
+        // Adapt the struct of members
+        const adaptedMembers = members.map(member => ({
+            walletAddress: member.u_walletAddress,
+            alias: member.u_alias
+        }));
+        res.status(200).send(adaptedMembers);
+    }
+    catch (error) {
+        console.error("Error al obtener los miembros del grupo:", error);
+        res.status(500).send(error);
+    }
+});
+exports.getGroupMembers = getGroupMembers;

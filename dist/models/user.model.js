@@ -42,17 +42,13 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "groups", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, transaction => transaction.proposedBy),
+    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, transaction => transaction.proposedby),
     __metadata("design:type", Array)
 ], User.prototype, "transactionsProposed", void 0);
 __decorate([
     (0, typeorm_1.ManyToMany)(() => transaction_model_1.Transaction, transaction => transaction.signers),
     __metadata("design:type", Array)
 ], User.prototype, "signedTransactions", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, transaction => transaction.receiver),
-    __metadata("design:type", Array)
-], User.prototype, "transactionsReceived", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)('users') // Define the table asociety in PostgreSQL
 ], User);

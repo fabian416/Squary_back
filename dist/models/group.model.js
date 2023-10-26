@@ -13,10 +13,15 @@ exports.Group = void 0;
 const typeorm_1 = require("typeorm");
 const user_model_1 = require("./user.model");
 const transaction_model_1 = require("./transaction.model");
+const debt_model_1 = require("./debt.model");
 const pendingInvitation_model_1 = require("./pendingInvitation.model");
 let Group = class Group extends typeorm_1.BaseEntity {
 };
 exports.Group = Group;
+__decorate([
+    (0, typeorm_1.OneToMany)(() => debt_model_1.Debt, debt => debt.group),
+    __metadata("design:type", Array)
+], Group.prototype, "debts", void 0);
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)

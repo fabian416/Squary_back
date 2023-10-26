@@ -10,6 +10,7 @@ import  morgan  from 'morgan';
 import userRoutes from './routes/user.routes';
 import groupRoutes from './routes/group.routes';
 import transactionRoutes from './routes/transaction.routes';
+import debtRoutes from './routes/debt.routes';  
 
 import * as userController from './controllers/user.controller';
 import * as groupController from './controllers/group.controller'; 
@@ -55,9 +56,21 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 
 // Routes
+
+console.log("Configuring routes...");
+
+// Middleware to see all the request incoming
+app.use((req, res, next) => {
+    console.log(`Incoming request: ${req.method} ${req.path}`);
+    next();
+});
+
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/debts', debtRoutes);
+
+console.log("Routes configured!");
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);

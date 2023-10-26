@@ -35,6 +35,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const group_routes_1 = __importDefault(require("./routes/group.routes"));
 const transaction_routes_1 = __importDefault(require("./routes/transaction.routes"));
+const debt_routes_1 = __importDefault(require("./routes/debt.routes"));
 const userController = __importStar(require("./controllers/user.controller"));
 const groupController = __importStar(require("./controllers/group.controller"));
 const transactionController = __importStar(require("./controllers/transaction.controller"));
@@ -48,7 +49,7 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 app.use((0, cors_1.default)(corsOptions));
-//Configuring CORS for Socket.io
+//Configuration CORS for Socket.io
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: 'http://localhost:3000',
@@ -67,9 +68,17 @@ app.use((req, res, next) => {
     next();
 });
 // Routes
+console.log("Configuring routes...");
+// Middleware to see all the request incoming
+app.use((req, res, next) => {
+    console.log(`Incoming request: ${req.method} ${req.path}`);
+    next();
+});
 app.use('/api/users', user_routes_1.default);
 app.use('/api/groups', group_routes_1.default);
 app.use('/api/transactions', transaction_routes_1.default);
+app.use('/api/debts', debt_routes_1.default);
+console.log("Routes configured!");
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send("¡Algo salió mal!");
