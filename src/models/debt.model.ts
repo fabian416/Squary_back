@@ -26,14 +26,13 @@ export class Debt extends BaseEntity {
     @Column({ name: 'groupid' })  
     groupId: number;
 
-
     @ManyToOne(() => Group, group => group.debts)
     @JoinColumn({ name: 'groupid' }) 
     group: Group;
 
     // Relation between the debts and the transactions
     @ManyToOne(() => Transaction, transaction => transaction.debts)
-    @JoinColumn({ name: 'transactionid' }) // Corresponde a la columna transactionid en la tabla debts
+    @JoinColumn({ name: 'transactionid' })
     transaction: Transaction;
 
     // amount of the debt
@@ -43,5 +42,13 @@ export class Debt extends BaseEntity {
     // Date creation of de debt
     @CreateDateColumn({ name: 'createdat' })
     createdAt: Date;
-}
 
+    @Column('varchar', { default: 'pending' })
+    status: string;
+
+    // Constructor agregado para permitir la creación de un objeto Debt con un objeto de configuración
+    constructor(init?: Partial<Debt>) {
+        super();
+        Object.assign(this, init);
+    }
+}

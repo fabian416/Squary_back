@@ -21,10 +21,11 @@ __decorate([
 ], PendingInvitation.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => group_model_1.Group, group => group.pendingInvitations),
+    (0, typeorm_1.JoinColumn)({ name: 'group_id' }),
     __metadata("design:type", group_model_1.Group)
 ], PendingInvitation.prototype, "group", void 0);
 __decorate([
-    (0, typeorm_1.Column)('varchar'),
+    (0, typeorm_1.Column)('varchar', { name: 'walletaddress' }),
     __metadata("design:type", String)
 ], PendingInvitation.prototype, "walletAddress", void 0);
 __decorate([

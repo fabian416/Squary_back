@@ -19,7 +19,9 @@ const typeorm_1 = require("typeorm");
 const user_model_1 = require("./models/user.model");
 const group_model_1 = require("./models/group.model");
 const transaction_model_1 = require("./models/transaction.model");
+const debt_model_1 = require("./models/debt.model");
 const pendingInvitation_model_1 = require("./models/pendingInvitation.model");
+const transactionsConfirmations_1 = require("./models/transactionsConfirmations");
 dotenv_1.default.config();
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
@@ -28,14 +30,14 @@ exports.AppDataSource = new typeorm_1.DataSource({
     username: process.env.PG_USER,
     password: process.env.PG_PASSWORD,
     database: process.env.PG_DATABASE,
-    entities: [user_model_1.User, group_model_1.Group, transaction_model_1.Transaction, pendingInvitation_model_1.PendingInvitation],
+    entities: [user_model_1.User, group_model_1.Group, transaction_model_1.Transaction, pendingInvitation_model_1.PendingInvitation, debt_model_1.Debt, transactionsConfirmations_1.TransactionConfirmation],
     logging: true
 });
 exports.AppDataSource.initialize()
     .then(() => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Data Source ha sido inicializado!");
     const currentDb = yield exports.AppDataSource.query("SELECT current_database();");
-    console.log("Conectado a la base de datos:", currentDb[0].current_database); // Deberías acceder al primer resultado y a la propiedad correcta.
+    console.log("Conectado a la base de datos:", currentDb[0].current_database); // You should access the first result and the correct property.
 }))
     .catch((err) => {
     console.error("Error durante la inicialización de Data Source", err);

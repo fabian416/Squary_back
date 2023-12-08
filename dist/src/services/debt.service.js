@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDebtById = exports.settleDebts = exports.getDebtsByGroup = exports.createDebt = exports.createDebtsFromTransaction = void 0;
+exports.getDebtById = exports.settleDebts = exports.getDebtsByGroup = exports.createDebt = exports.createDebtsFromTransaction = exports.simplifyDebts = void 0;
 const debt_model_1 = require("../models/debt.model");
 const database_1 = require("../database");
 const group_model_1 = require("../models/group.model");
@@ -44,6 +44,7 @@ const simplifyDebts = (debts) => __awaiter(void 0, void 0, void 0, function* () 
     }
     return simplifiedDebts;
 });
+exports.simplifyDebts = simplifyDebts;
 const createDebtsFromTransaction = (transaction, sharedWith, proposedBy) => __awaiter(void 0, void 0, void 0, function* () {
     if (!transaction || !sharedWith || sharedWith.length === 0 || !proposedBy) {
         throw new Error('Invalid parameters for creating debts.');
@@ -76,7 +77,7 @@ const createDebtsFromTransaction = (transaction, sharedWith, proposedBy) => __aw
     // Guardar todas las deudas en la base de datos.  
     const savedDebts = yield Promise.all(debtsToCreate.map(debt => debtRepository.save(debt)));
     // Simplificar las deudas guardadas
-    const simplifiedDebts = yield simplifyDebts(savedDebts);
+    const simplifiedDebts = yield (0, exports.simplifyDebts)(savedDebts);
     return { message: 'Debts created successfully from transaction.' };
 });
 exports.createDebtsFromTransaction = createDebtsFromTransaction;

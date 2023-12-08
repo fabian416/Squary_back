@@ -13,6 +13,7 @@ import { User } from './user.model';
 import { Transaction } from './transaction.model';
 import { Debt } from './debt.model';
 import { PendingInvitation } from './pendingInvitation.model';
+import { TransactionConfirmation } from './transactionsConfirmations';
 
 @Entity('groups')
 export class Group extends BaseEntity {
@@ -58,4 +59,10 @@ export class Group extends BaseEntity {
 
     @Column('int', { name: 'signature_threshold', nullable: true })
     signatureThreshold: number;
+
+    @OneToMany(() => TransactionConfirmation, confirmation => confirmation.group)
+    confirmations: TransactionConfirmation[];
+
+    @Column({ name: 'settlecompleted', default: false })
+    settleCompleted: boolean;
 }

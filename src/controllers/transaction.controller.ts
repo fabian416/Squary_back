@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
 import { Transaction } from '../models/transaction.model';
-import { Debt } from '../models/debt.model';
+import * as DebtService from '../services/debt.service';
 import { Group } from '../models/group.model'; 
 import { User } from '../models/user.model';
+import { TransactionConfirmation } from '../models/transactionsConfirmations';
+import { AppDataSource } from '../../data-source';
+import { Not } from "typeorm";
+
+
 
 let io: any;
 
@@ -33,23 +38,16 @@ export const createTransaction = async (req: Request, res: Response): Promise<Re
         newTransaction.proposedby = proposedBy;
         newTransaction.sharedWith = sharedWith;
         newTransaction.type = type;
-        newTransaction.togroupid = groupId; // Asociando la transacción con el grupo
+        newTransaction.togroupid = groupId; 
+        console.log("Group ID:", groupId);
+        console.log("Transaction before saving:", newTransaction);
+
 
         newTransaction = await newTransaction.save();
 
         // Lógica para crear deudas (si es necesario)
         if (type === 'EXPENSE') {
-            const debtAmount = amount / sharedWith.length;
-            for (const member of sharedWith) {
-                if (member !== proposedBy) {
-                    let debt = new Debt();
-                    debt.debtor = member;
-                    debt.creditor = proposedBy;
-                    debt.amount = debtAmount;
-                    debt.transaction = newTransaction;
-                    await debt.save();
-                }
-            }
+            await DebtService.createDebtsFromTransaction(newTransaction, sharedWith, proposedBy);
         }
 
         return res.status(201).json(newTransaction);
@@ -60,32 +58,29 @@ export const createTransaction = async (req: Request, res: Response): Promise<Re
     }
 };
 
+
 export const getTransactionsByGroup = async (req: Request, res: Response) => {
     const { groupId } = req.params;
+
     if (!groupId) {
         return res.status(400).json({ message: 'Group ID is required.' });
     }
 
     try {
-        const transactions = await Transaction.find({ where: { togroupid: Number(groupId) } });
+        const numGroupId = parseInt(groupId, 10);
+        if (isNaN(numGroupId)) {
+            return res.status(400).json({ message: 'Invalid group ID.' });
+        }
 
-        // Obtener todas las direcciones únicas de las transacciones
-        const uniqueAddresses = [...new Set(transactions.flatMap(t => t.sharedWith))];
-
-        // Obtener los alias para esas direcciones
-        const users = await User.findByIds(uniqueAddresses);
-        const addressToAliasMap: { [address: string]: string } = {};
-        users.forEach(user => {
-            addressToAliasMap[user.walletAddress] = user.alias;
+        // Excluir las transacciones de asentamiento
+        const transactions = await Transaction.find({
+            where: { 
+                togroupid: numGroupId,
+                type: Not('SETTLEMENT' as any )
+            }
         });
 
-        // Reemplazar direcciones con alias en las transacciones
-        const transformedTransactions = transactions.map(transaction => ({
-            ...transaction,
-            sharedWith: transaction.sharedWith.map(address => addressToAliasMap[address] || address)
-        }));
-
-        return res.status(200).json(transformedTransactions);
+        return res.status(200).json(transactions);
     } catch (error) {
         console.error('Error fetching transactions for group:', error);
         return res.status(500).json({ message: 'Internal server error.' });
@@ -116,6 +111,103 @@ export const getTransactionsByGroup = async (req: Request, res: Response) => {
             return res.status(500).json({ message: 'Internal server error.' });
         }
     };
+    
+    export const settleSpecialTransaction = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { groupId, amount, description } = req.body;
+        
+            // Validación básica de los campos
+            if (!groupId || !amount || !description) {
+                return res.status(400).json({ message: 'Missing required fields.' });
+            }
+        
+            // Encuentra el grupo asociado
+            const group = await Group.findOne({ where: { id: groupId } });
+            if (!group) {
+                return res.status(404).json({ message: 'Group not found.' });
+            }
+
+            const existingSettlement = await Transaction.findOne({
+                where: { 
+                    togroupid: groupId, 
+                    type: 'SETTLEMENT' 
+                }
+            });
+    
+            if (existingSettlement) {
+                return res.status(400).json({ message: 'A settlement transaction already exists for this group.' });
+            }    
+        
+            // Crear la transacción de asentamiento
+            let settlementTransaction = new Transaction();
+            settlementTransaction.amount = amount;
+            settlementTransaction.description = `Settlement executed at ${new Date().toISOString()}`;
+            settlementTransaction.togroupid = groupId;
+
+            settlementTransaction.type = 'SETTLEMENT';
+        
+            // Guardar la transacción de asentamiento
+            settlementTransaction = await settlementTransaction.save();
+
+            const relatedTransactions = await Transaction.find({
+                where: { togroupid: groupId, includedInSettlement: false }
+              });
+              relatedTransactions.forEach(async (tx) => {
+                tx.includedInSettlement = true;
+                await tx.save();
+              });              
+    
+            // Actualizar el estado de asentamiento del grupo
+            group.settleCompleted = true;
+            await group.save();
+
+        
+            return res.status(201).json(settlementTransaction);
+        
+        } catch (error) {
+            console.error('Error creating settlement transaction:', error);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+    };
+    
+
+    export const getSettlementTransactions = async (req: Request, res: Response) => {
+        const groupId = parseInt(req.params.groupId);
+    
+        if (isNaN(groupId)) {
+            return res.status(400).json({ message: 'Invalid group ID.' });
+        }
+    
+        const transactions = await Transaction.find({ 
+            where: { 
+                togroupid: groupId, 
+                type: 'SETTLEMENT' 
+            }
+        });
+    
+        return res.status(200).json(transactions);
+    };
+    
+    export const getSettlementTransactionsByGroup = async (req:Request, res:Response) => {
+        const groupId = parseInt(req.params.groupId, 10);
+    
+        if (isNaN(groupId)) {
+            return res.status(400).json({ message: 'Invalid group ID.' });
+        }
+    
+        try {
+            // Buscar transacciones de asentamiento para el grupo especificado
+            const settlements = await Transaction.find({
+                where: { togroupid: groupId, type: 'SETTLEMENT' }
+            });
+    
+            res.status(200).json(settlements);
+        } catch (error) {
+            console.error('Error fetching settlement transactions for group:', error);
+            res.status(500).json({ message: 'Internal server error.' });
+        }
+    };
+    
     
     export const updateTransaction = async (req: Request, res: Response) => {
         const id = req.params.id; // Asumiendo que recibes el id como parámetro de ruta
@@ -178,26 +270,155 @@ export const getTransactionsByGroup = async (req: Request, res: Response) => {
     };
     
 
-    export async function settleDebts(req: Request, res: Response): Promise<Response> {
-        try {
-            const { groupId } = req.body; // suponiendo que necesitas el ID del grupo para obtener todas las deudas de ese grupo
-    
-            if (!groupId) {
-                return res.status(400).json({ message: 'Group ID is required.' });
-            }
-    
-            // Obtener todas las deudas para este grupo que aún no se han liquidado
-            const group = await Group.findOne(groupId);  // suponiendo que Group es tu modelo para grupos
-            const pendingDebts = await Debt.find({ where: { group: groupId } });
+// Iniciar una confirmación de asentamiento
+// Iniciar una confirmación de asentamiento
+export const initiateSettlementConfirmation = async (req: Request, res: Response) => {
+    const groupId = parseInt(req.params.groupId, 10);
 
-            // Procesa las deudas y crea transacciones propuestas
-            // (Esta es la parte compleja y puede requerir ajustes según la lógica que desees implementar)
-            // ... 
-    
-            return res.status(200).json({ message: 'Settlement transactions proposed.' });
-        } catch (error) {
-            console.error('Error settling debts:', error);
-            return res.status(500).json({ message: 'Internal server error.' });
+    if (isNaN(groupId)) {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+
+    try {
+        const group = await Group.findOne({ where: { id: groupId } });
+
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found.' });
         }
-    };
+
+        const existingConfirmations = await TransactionConfirmation.find({ 
+            where: { group: { id: groupId } }
+        });
+
+        // Verifica si el asentamiento anterior ha sido completado
+        if (existingConfirmations.length > 0 && !group.settleCompleted) {
+            return res.status(400).json({ message: 'Settlement process is already in progress.' });
+        }
+
+        // Resetear o eliminar las confirmaciones existentes
+        await TransactionConfirmation.delete({ group: { id: groupId } });
+
+        // Establecer settleCompleted en false para indicar que el proceso de asentamiento ha comenzado
+        group.settleCompleted = false;
+        await group.save();
+
+        // Crear una confirmación para cada miembro del grupo
+        group.selectedSigners.forEach(async (memberAddress: string) => {
+            const newConfirmation = new TransactionConfirmation();
+            newConfirmation.group = group;
+            newConfirmation.userWalletAddress = memberAddress;
+            await newConfirmation.save();
+        });
+
+        res.status(200).json({ message: 'Settlement confirmation initiated successfully.' });
+    } catch (error) {
+        console.error('Error initiating settlement confirmation:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+
+
+// Confirmar asentamiento
+export const confirmSettlement = async (req: Request, res: Response) => {
+    const groupId = parseInt(req.params.groupId, 10);
+    const userWalletAddress = req.body.userWalletAddress; 
+
+    if (isNaN(groupId)) {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+
+    try {
+        const confirmation = await TransactionConfirmation.findOne({
+            where: {
+                group: { id: groupId },
+                userWalletAddress: userWalletAddress 
+            }
+        });
+
+        if (confirmation) {
+            confirmation.confirmed = true;
+            await confirmation.save();
+            return res.status(200).json({ message: 'Settlement confirmed successfully.' });
+        }
+        return res.status(404).json({ message: 'Confirmation not found.' });
+    } catch (error) {
+        console.error('Error confirming settlement:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+
+// Obtener confirmaciones de asentamiento
+export const getSettlementConfirmations = async (req: Request, res: Response) => {
+    const groupId = parseInt(req.params.groupId, 10);
+
+    if (isNaN(groupId)) {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+
+    try {
+        const confirmations = await TransactionConfirmation.find({
+            where: { group: { id: groupId } },
+            relations: ["group", "user"]
+        });
+        return res.status(200).json(confirmations);
+    } catch (error) {
+        console.error('Error getting settlement confirmations:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+export const getSettleStatus = async (req: Request, res: Response) => {
+    const groupId = parseInt(req.params.groupId, 10);
+
+    if (isNaN(groupId)) {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+
+    try {
+        const group = await Group.findOne({ where: { id: groupId } });
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found.' });
+        }
+
+        const confirmations = await TransactionConfirmation.find({
+            where: { group: { id: groupId }, confirmed: true }
+        });
+
+        const isInitiated = confirmations.length > 0;
+        const isConfirmed = confirmations.length >= group.signatureThreshold;
+
+        res.json({ initiated: isInitiated, confirmed: isConfirmed });
+    } catch (error) {
+        console.error('Error getting settle status:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+
+export const resetSettle = async (req: Request, res: Response) => {
+    const groupId = parseInt(req.params.groupId, 10);
+
+    if (isNaN(groupId)) {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+
+    try {
+        // Verificar si el grupo existe
+
+        const group = await Group.findOne({ where: { id: groupId } });
+
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found.' });
+        }
+
+        // Resetear el estado de las confirmaciones a 'false'
+        await TransactionConfirmation.update(
+            { group: { id: groupId } },
+            { confirmed: false }
+        );
     
+        res.status(200).json({ message: 'Settlement state reset successfully.' });
+    } catch (error) {
+        console.error('Error resetting settlement state:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+

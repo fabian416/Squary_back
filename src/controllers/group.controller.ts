@@ -117,9 +117,16 @@ export const getUserGroups = async (req: Request, res: Response) => {
     }
 };
 export const getGroupMembers = async (req: Request, res: Response) => {
-    const groupId = req.params.groupId;
+    // Convert the groupId from string to number
+    const groupId = parseInt(req.params.groupId, 10);
+
+    // Check if groupId is a valid number after parsing
+    if (isNaN(groupId)) {
+        return res.status(400).send({ message: "Invalid group ID." });
+    }
 
     try {
+        // Obtienes los miembros del grupo
         const members = await AppDataSource.manager
             .createQueryBuilder("users", "u")
             .innerJoin("groups", "g", "u.walletAddress = ANY(g.selected_signers)")
@@ -127,17 +134,25 @@ export const getGroupMembers = async (req: Request, res: Response) => {
             .select(["u.walletAddress", "u.alias"])
             .getRawMany();
 
-        // Adapt the struct of members
+        // Obtienes también la dirección Gnosis Safe del grupo
+        const group = await AppDataSource.manager.findOne(Group, { where: { id: groupId } });
+        if (!group) {
+            return res.status(404).send({ message: "Group not found." });
+        }
+        
+        // adapt the structure of members and add the gnosis safe 
         const adaptedMembers = members.map(member => ({
             walletAddress: member.u_walletAddress,
             alias: member.u_alias
         }));
 
-        res.status(200).send(adaptedMembers);
+        //  we send the member and the gnosis address
+        
+        res.status(200).send({ members: adaptedMembers, gnosisSafeAddress: group.gnosissafeaddress });
     } catch (error) {
         console.error("Error al obtener los miembros del grupo:", error);
         res.status(500).send(error);
     }
+    
 };
-
 

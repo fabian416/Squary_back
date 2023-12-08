@@ -29,4 +29,5 @@ const router = (0, express_1.Router)();
 router.post('/', DebtController.createDebt);
 router.get('/groups/:groupId', DebtController.getDebtsByGroup);
 router.get('/:debtId', DebtController.getDebtById);
+router.post('/settle', DebtController.settleDebtsController);
 exports.default = router;

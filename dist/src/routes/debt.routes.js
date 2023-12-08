@@ -22,23 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const transactionController = __importStar(require("../controllers/transaction.controller"));
-const router = express_1.default.Router();
-// Endpoint to create a transaction
-router.post('/create', transactionController.createTransaction);
-// Endpoint to get a transaction by Group id
-router.get('/:groupId/expenses', transactionController.getTransactionsByGroup);
-// Endpoint to get a transaction by his ID
-router.get('/:id', transactionController.getTransactionById);
-// Endpoint to update a transaction
-router.put('/:id', transactionController.updateTransaction);
-// Endpoint to delete a transaction
-router.delete('/:id', transactionController.deleteTransaction);
-// Endpoint to get all the trasnactions
-router.get('/', transactionController.getAllTransactions);
+const express_1 = require("express");
+const DebtController = __importStar(require("../controllers/debt.controller"));
+const router = (0, express_1.Router)();
+router.post('/', DebtController.createDebt);
+router.get('/groups/:groupId', DebtController.getDebtsByGroup);
+router.get('/:debtId', DebtController.getDebtById);
+router.post('/settle', DebtController.settleDebtsController);
+router.get('/groups/:groupId/unsettled', DebtController.getUnsettledDebtsByGroup);
 exports.default = router;

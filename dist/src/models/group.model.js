@@ -13,10 +13,16 @@ exports.Group = void 0;
 const typeorm_1 = require("typeorm");
 const user_model_1 = require("./user.model");
 const transaction_model_1 = require("./transaction.model");
+const debt_model_1 = require("./debt.model");
 const pendingInvitation_model_1 = require("./pendingInvitation.model");
+const transactionsConfirmations_1 = require("./transactionsConfirmations");
 let Group = class Group extends typeorm_1.BaseEntity {
 };
 exports.Group = Group;
+__decorate([
+    (0, typeorm_1.OneToMany)(() => debt_model_1.Debt, debt => debt.group),
+    __metadata("design:type", Array)
+], Group.prototype, "debts", void 0);
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
@@ -70,6 +76,14 @@ __decorate([
     (0, typeorm_1.Column)('int', { name: 'signature_threshold', nullable: true }),
     __metadata("design:type", Number)
 ], Group.prototype, "signatureThreshold", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => transactionsConfirmations_1.TransactionConfirmation, confirmation => confirmation.group),
+    __metadata("design:type", Array)
+], Group.prototype, "confirmations", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'settlecompleted', default: false }),
+    __metadata("design:type", Boolean)
+], Group.prototype, "settleCompleted", void 0);
 exports.Group = Group = __decorate([
     (0, typeorm_1.Entity)('groups')
 ], Group);

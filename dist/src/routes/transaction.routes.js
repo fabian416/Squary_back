@@ -29,6 +29,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const transactionController = __importStar(require("../controllers/transaction.controller"));
 const router = express_1.default.Router();
+// Endpoint to create a transaction
 router.post('/create', transactionController.createTransaction);
-router.get('/:groupId', transactionController.getAllTransactionsForGroup);
+// Endpoint to get a transaction by Group id
+router.get('/:groupId/expenses', transactionController.getTransactionsByGroup);
+// Endpoint to get a transaction by his ID
+router.get('/:id', transactionController.getTransactionById);
+// Endpoint to update a transaction
+router.put('/:id', transactionController.updateTransaction);
+// Endpoint to delete a transaction
+router.delete('/:id', transactionController.deleteTransaction);
+// Endpoint to get all the trasnactions
+router.get('/', transactionController.getAllTransactions);
+// routes to confirm the transactions
+router.post('/:groupId/initiateConfirmation', transactionController.initiateSettlementConfirmation);
+router.post('/:groupId/confirm', transactionController.confirmSettlement);
+router.get('/:groupId/confirmations', transactionController.getSettlementConfirmations);
+router.get('/:groupId/settleState', transactionController.getSettleStatus);
+router.post('/:groupId/resetSettleState', transactionController.resetSettle);
+router.post('/:groupid/settlementTransaction', transactionController.settleSpecialTransaction);
+router.get('/:groupId/settlementTransactions', transactionController.getSettlementTransactionsByGroup);
 exports.default = router;

@@ -32,7 +32,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.settleDebtsController = exports.getDebtById = exports.getDebtsByGroup = exports.createDebt = void 0;
+exports.settleDebtsController = exports.getDebtById = exports.getUnsettledDebtsByGroup = exports.getDebtsByGroup = exports.createDebt = void 0;
+const debt_model_1 = require("../models/debt.model");
 const DebtService = __importStar(require("../services/debt.service"));
 const createDebt = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -64,6 +65,28 @@ const getDebtsByGroup = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getDebtsByGroup = getDebtsByGroup;
+const getUnsettledDebtsByGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const groupId = parseInt(req.params.groupId, 10);
+    if (isNaN(groupId)) {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+    try {
+        const debts = yield debt_model_1.Debt.find({
+            where: {
+                group: { id: groupId },
+                transaction: { includedInSettlement: false }
+            },
+            relations: ["transaction"] // Asegúrate de incluir la relación aquí
+        });
+        const simplifiedDebts = yield DebtService.simplifyDebts(debts);
+        res.json(simplifiedDebts);
+    }
+    catch (error) {
+        console.error('Error fetching unsettled debts for group:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+exports.getUnsettledDebtsByGroup = getUnsettledDebtsByGroup;
 const getDebtById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const debtId = parseInt(req.params.debtId, 10);

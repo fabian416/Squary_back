@@ -6,6 +6,7 @@ import { Group } from "./models/group.model";
 import { Transaction } from "./models/transaction.model";
 import { Debt } from "./models/debt.model";
 import { PendingInvitation } from "./models/pendingInvitation.model";
+import { TransactionConfirmation } from "./models/transactionsConfirmations";
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ export const AppDataSource = new DataSource({
     username: process.env.PG_USER,
     password: process.env.PG_PASSWORD,
     database: process.env.PG_DATABASE,
-    entities: [User, Group, Transaction, PendingInvitation, Debt ],
+    entities: [User, Group, Transaction, PendingInvitation, Debt, TransactionConfirmation],
     logging: true 
 });
 

@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -9,9 +32,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.settleDebts = exports.getAllTransactions = exports.deleteTransaction = exports.updateTransaction = exports.getTransactionById = exports.getTransactionsByGroup = exports.createTransaction = exports.setIo = void 0;
+exports.getAllTransactions = exports.deleteTransaction = exports.updateTransaction = exports.getTransactionById = exports.getTransactionsByGroup = exports.createTransaction = exports.setIo = void 0;
 const transaction_model_1 = require("../models/transaction.model");
-const debt_model_1 = require("../models/debt.model");
+const DebtService = __importStar(require("../services/debt.service"));
 const group_model_1 = require("../models/group.model");
 const user_model_1 = require("../models/user.model");
 let io;
@@ -39,21 +62,13 @@ const createTransaction = (req, res) => __awaiter(void 0, void 0, void 0, functi
         newTransaction.proposedby = proposedBy;
         newTransaction.sharedWith = sharedWith;
         newTransaction.type = type;
-        newTransaction.togroupid = groupId; // Asociando la transacción con el grupo
+        newTransaction.togroupid = groupId;
+        console.log("Group ID:", groupId);
+        console.log("Transaction before saving:", newTransaction);
         newTransaction = yield newTransaction.save();
         // Lógica para crear deudas (si es necesario)
         if (type === 'EXPENSE') {
-            const debtAmount = amount / sharedWith.length;
-            for (const member of sharedWith) {
-                if (member !== proposedBy) {
-                    let debt = new debt_model_1.Debt();
-                    debt.debtor = member;
-                    debt.creditor = proposedBy;
-                    debt.amount = debtAmount;
-                    debt.transaction = newTransaction;
-                    yield debt.save();
-                }
-            }
+            yield DebtService.createDebtsFromTransaction(newTransaction, sharedWith, proposedBy);
         }
         return res.status(201).json(newTransaction);
     }
@@ -157,26 +172,3 @@ const getAllTransactions = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getAllTransactions = getAllTransactions;
-function settleDebts(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { groupId } = req.body; // suponiendo que necesitas el ID del grupo para obtener todas las deudas de ese grupo
-            if (!groupId) {
-                return res.status(400).json({ message: 'Group ID is required.' });
-            }
-            // Obtener todas las deudas para este grupo que aún no se han liquidado
-            const group = yield group_model_1.Group.findOne(groupId); // suponiendo que Group es tu modelo para grupos
-            const pendingDebts = yield debt_model_1.Debt.find({ where: { group: groupId } });
-            // Procesa las deudas y crea transacciones propuestas
-            // (Esta es la parte compleja y puede requerir ajustes según la lógica que desees implementar)
-            // ... 
-            return res.status(200).json({ message: 'Settlement transactions proposed.' });
-        }
-        catch (error) {
-            console.error('Error settling debts:', error);
-            return res.status(500).json({ message: 'Internal server error.' });
-        }
-    });
-}
-exports.settleDebts = settleDebts;
-;

@@ -61,8 +61,12 @@ export class Transaction extends BaseEntity {
     @Column('varchar', { nullable: true })
     type: 'EXPENSE' | 'SETTLEMENT'; // Tipo de transacción
 
+    @Column({ name:'includedinsettlement',default: false })
+    includedInSettlement: boolean;
+
     @OneToMany(() => Debt, debt => debt.transaction)
     debts: Debt[];
+
 }
 
 
