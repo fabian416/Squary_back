@@ -17,7 +17,7 @@ let User = class User extends typeorm_1.BaseEntity {
 };
 exports.User = User;
 __decorate([
-    (0, typeorm_1.PrimaryColumn)({ type: 'varchar', unique: true, name: "walletAddress" }),
+    (0, typeorm_1.PrimaryColumn)({ type: 'varchar', unique: true, name: 'walletAddress' }),
     __metadata("design:type", String)
 ], User.prototype, "walletAddress", void 0);
 __decorate([
@@ -30,23 +30,23 @@ __decorate([
 ], User.prototype, "email", void 0);
 __decorate([
     (0, typeorm_1.ManyToMany)(() => User),
-    (0, typeorm_1.JoinTable)({ name: "user_friends" }),
+    (0, typeorm_1.JoinTable)({ name: 'user_friends' }),
     __metadata("design:type", Array)
 ], User.prototype, "friends", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => group_model_1.Group, group => group.owner),
+    (0, typeorm_1.OneToMany)(() => group_model_1.Group, (group) => group.owner),
     __metadata("design:type", Array)
 ], User.prototype, "groupsOwned", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => group_model_1.Group, group => group.members),
+    (0, typeorm_1.ManyToMany)(() => group_model_1.Group, (group) => group.members),
     __metadata("design:type", Array)
 ], User.prototype, "groups", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, transaction => transaction.proposedby),
+    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, (transaction) => transaction.proposedby),
     __metadata("design:type", Array)
 ], User.prototype, "transactionsProposed", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => transaction_model_1.Transaction, transaction => transaction.signers),
+    (0, typeorm_1.ManyToMany)(() => transaction_model_1.Transaction, (transaction) => transaction.signers),
     __metadata("design:type", Array)
 ], User.prototype, "signedTransactions", void 0);
 exports.User = User = __decorate([

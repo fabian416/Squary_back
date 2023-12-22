@@ -25,12 +25,12 @@ __decorate([
     __metadata("design:type", Boolean)
 ], TransactionConfirmation.prototype, "confirmed", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_model_1.User, user => user.walletAddress),
+    (0, typeorm_1.ManyToOne)(() => user_model_1.User, (user) => user.walletAddress),
     (0, typeorm_1.JoinColumn)({ name: 'user_wallet_address' }),
     __metadata("design:type", user_model_1.User)
 ], TransactionConfirmation.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, group => group.confirmations),
+    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, (group) => group.confirmations),
     (0, typeorm_1.JoinColumn)({ name: 'group_id' }),
     __metadata("design:type", group_model_1.Group)
 ], TransactionConfirmation.prototype, "group", void 0);
@@ -39,7 +39,11 @@ __decorate([
     __metadata("design:type", Date)
 ], TransactionConfirmation.prototype, "created_at", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', name: 'updated_at', default: () => 'CURRENT_TIMESTAMP' }),
+    (0, typeorm_1.Column)({
+        type: 'timestamp',
+        name: 'updated_at',
+        default: () => 'CURRENT_TIMESTAMP',
+    }),
     __metadata("design:type", Date)
 ], TransactionConfirmation.prototype, "updatedAt", void 0);
 __decorate([

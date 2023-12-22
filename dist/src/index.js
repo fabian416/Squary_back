@@ -26,11 +26,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("reflect-metadata");
 const express_1 = __importDefault(require("express"));
 const socket_io_1 = require("socket.io");
 const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
-require("reflect-metadata");
 const morgan_1 = __importDefault(require("morgan"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const group_routes_1 = __importDefault(require("./routes/group.routes"));
@@ -46,16 +46,16 @@ const server = http_1.default.createServer(app);
 //Configuration of CORS for Express
 const corsOptions = {
     origin: 'http://localhost:3000',
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
 };
 app.use((0, cors_1.default)(corsOptions));
 //Configuration CORS for Socket.io
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: 'http://localhost:3000',
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
 });
 userController.setIo(io);
 groupController.setIo(io);
@@ -68,7 +68,7 @@ app.use((req, res, next) => {
     next();
 });
 // Routes
-console.log("Configuring routes...");
+console.log('Configuring routes...');
 // Middleware to see all the request incoming
 app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.path}`);
@@ -78,10 +78,10 @@ app.use('/api/users', user_routes_1.default);
 app.use('/api/groups', group_routes_1.default);
 app.use('/api/transactions', transaction_routes_1.default);
 app.use('/api/debts', debt_routes_1.default);
-console.log("Routes configured!");
+console.log('Routes configured!');
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send("¡Algo salió mal!");
+    res.status(500).send('¡Algo salió mal!');
 });
 const PORT = 3001;
 server.listen(PORT, () => {

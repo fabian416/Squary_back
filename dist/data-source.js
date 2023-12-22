@@ -15,7 +15,7 @@ const pendingInvitation_model_1 = require("./src/models/pendingInvitation.model"
 const transactionsConfirmations_1 = require("./src/models/transactionsConfirmations");
 dotenv_1.default.config();
 exports.AppDataSource = new typeorm_1.DataSource({
-    type: "postgres",
+    type: 'postgres',
     host: process.env.PG_HOST,
     port: Number(process.env.PG_PORT),
     username: process.env.PG_USER,
@@ -24,7 +24,18 @@ exports.AppDataSource = new typeorm_1.DataSource({
     synchronize: true,
     logging: true,
     logger: 'advanced-console',
-    entities: [user_model_1.User, group_model_1.Group, transaction_model_1.Transaction, pendingInvitation_model_1.PendingInvitation, debt_model_1.Debt, transactionsConfirmations_1.TransactionConfirmation],
-    migrations: [ /* paths o clases de tus migraciones */],
-    subscribers: [ /* paths o clases de tus suscriptores */]
+    entities: [
+        user_model_1.User,
+        group_model_1.Group,
+        transaction_model_1.Transaction,
+        pendingInvitation_model_1.PendingInvitation,
+        debt_model_1.Debt,
+        transactionsConfirmations_1.TransactionConfirmation,
+    ],
+    migrations: [
+    /* paths o clases de tus migraciones */
+    ],
+    subscribers: [
+    /* paths o clases de tus suscriptores */
+    ],
 });

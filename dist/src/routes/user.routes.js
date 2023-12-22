@@ -29,4 +29,5 @@ const router = (0, express_1.Router)();
 router.post('/authenticate', userController.authenticate);
 router.post('/register', userController.register);
 router.get('/aliases-to-addresses', userController.getWalletAddressesByAliases);
+router.get('/addresses-to-aliases', userController.getAliasesByWalletAddresses);
 exports.default = router;

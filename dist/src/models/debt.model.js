@@ -34,16 +34,16 @@ __decorate([
     __metadata("design:type", String)
 ], Debt.prototype, "creditor", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'groupid' }),
+    (0, typeorm_1.Column)('int', { name: 'groupid' }),
     __metadata("design:type", Number)
 ], Debt.prototype, "groupId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, group => group.debts),
+    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, (group) => group.debts),
     (0, typeorm_1.JoinColumn)({ name: 'groupid' }),
     __metadata("design:type", group_model_1.Group)
 ], Debt.prototype, "group", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => transaction_model_1.Transaction, transaction => transaction.debts),
+    (0, typeorm_1.ManyToOne)(() => transaction_model_1.Transaction, (transaction) => transaction.debts),
     (0, typeorm_1.JoinColumn)({ name: 'transactionid' }),
     __metadata("design:type", transaction_model_1.Transaction)
 ], Debt.prototype, "transaction", void 0);

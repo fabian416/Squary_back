@@ -46,7 +46,9 @@ const createDebt = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         const errorMessage = error.message;
         console.log('Error Creating Debt:', errorMessage); // Agregar registro de error
-        return res.status(500).json({ message: "Error al crear la deuda", error: errorMessage });
+        return res
+            .status(500)
+            .json({ message: 'Error al crear la deuda', error: errorMessage });
     }
 });
 exports.createDebt = createDebt;
@@ -61,7 +63,12 @@ const getDebtsByGroup = (req, res) => __awaiter(void 0, void 0, void 0, function
     catch (error) {
         const errorMessage = error.message;
         console.log('Error Getting Debts:', errorMessage); // Agregar registro de error
-        return res.status(500).json({ message: "Error al obtener las deudas del grupo", error: errorMessage });
+        return res
+            .status(500)
+            .json({
+            message: 'Error al obtener las deudas del grupo',
+            error: errorMessage,
+        });
     }
 });
 exports.getDebtsByGroup = getDebtsByGroup;
@@ -74,9 +81,9 @@ const getUnsettledDebtsByGroup = (req, res) => __awaiter(void 0, void 0, void 0,
         const debts = yield debt_model_1.Debt.find({
             where: {
                 group: { id: groupId },
-                transaction: { includedInSettlement: false }
+                transaction: { includedInSettlement: false },
             },
-            relations: ["transaction"] // Asegúrate de incluir la relación aquí
+            relations: ['transaction'], // Asegúrate de incluir la relación aquí
         });
         const simplifiedDebts = yield DebtService.simplifyDebts(debts);
         res.json(simplifiedDebts);
@@ -97,13 +104,15 @@ const getDebtById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return res.json(debt);
         }
         else {
-            return res.status(404).json({ message: "Deuda no encontrada" });
+            return res.status(404).json({ message: 'Deuda no encontrada' });
         }
     }
     catch (error) {
         const errorMessage = error.message;
         console.log('Error Getting Debt:', errorMessage); // Agregar registro de error
-        return res.status(500).json({ message: "Error al obtener la deuda", error: errorMessage });
+        return res
+            .status(500)
+            .json({ message: 'Error al obtener la deuda', error: errorMessage });
     }
 });
 exports.getDebtById = getDebtById;

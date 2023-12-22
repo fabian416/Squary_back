@@ -20,7 +20,7 @@ __decorate([
     __metadata("design:type", Number)
 ], PendingInvitation.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, group => group.pendingInvitations),
+    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, (group) => group.pendingInvitations),
     (0, typeorm_1.JoinColumn)({ name: 'group_id' }),
     __metadata("design:type", group_model_1.Group)
 ], PendingInvitation.prototype, "group", void 0);

@@ -1,43 +1,41 @@
+import 'reflect-metadata';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
-import { AppDataSource } from "./database";
+import { AppDataSource } from './database';
 import { Server } from 'socket.io';
 import http from 'http';
 import cors from 'cors';
-import 'reflect-metadata';
-import  morgan  from 'morgan';
+import morgan from 'morgan';
 
 import userRoutes from './routes/user.routes';
 import groupRoutes from './routes/group.routes';
 import transactionRoutes from './routes/transaction.routes';
-import debtRoutes from './routes/debt.routes';  
+import debtRoutes from './routes/debt.routes';
 
 import * as userController from './controllers/user.controller';
-import * as groupController from './controllers/group.controller'; 
+import * as groupController from './controllers/group.controller';
 import * as transactionController from './controllers/transaction.controller';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-
 const app: Express = express();
 const server = http.createServer(app);
 
-
 //Configuration of CORS for Express
 const corsOptions = {
-    origin: 'http://localhost:3000',
-    optionsSuccessStatus: 200
+  origin: 'http://localhost:3000',
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
 //Configuration CORS for Socket.io
 const io = new Server(server, {
-    cors: {
-        origin: 'http://localhost:3000',
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
 });
 
 userController.setIo(io);
@@ -50,18 +48,18 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log('Body:', req.body);
-    next();
+  console.log('Body:', req.body);
+  next();
 });
 
 // Routes
 
-console.log("Configuring routes...");
+console.log('Configuring routes...');
 
 // Middleware to see all the request incoming
 app.use((req, res, next) => {
-    console.log(`Incoming request: ${req.method} ${req.path}`);
-    next();
+  console.log(`Incoming request: ${req.method} ${req.path}`);
+  next();
 });
 
 app.use('/api/users', userRoutes);
@@ -69,24 +67,22 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/debts', debtRoutes);
 
-console.log("Routes configured!");
+console.log('Routes configured!');
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).send("¡Algo salió mal!");
+  console.error(err.stack);
+  res.status(500).send('¡Algo salió mal!');
 });
-
 
 const PORT = 3001;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 
 io.on('connection', (socket) => {
-    console.log('User connected');
+  console.log('User connected');
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
-
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
 });

@@ -134,15 +134,6 @@ const settleSpecialTransaction = (req, res) => __awaiter(void 0, void 0, void 0,
         if (!group) {
             return res.status(404).json({ message: 'Group not found.' });
         }
-        const existingSettlement = yield transaction_model_1.Transaction.findOne({
-            where: {
-                togroupid: groupId,
-                type: 'SETTLEMENT'
-            }
-        });
-        if (existingSettlement) {
-            return res.status(400).json({ message: 'A settlement transaction already exists for this group.' });
-        }
         // Crear la transacción de asentamiento
         let settlementTransaction = new transaction_model_1.Transaction();
         settlementTransaction.amount = amount;
@@ -252,7 +243,6 @@ const getAllTransactions = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getAllTransactions = getAllTransactions;
-// Iniciar una confirmación de asentamiento
 // Iniciar una confirmación de asentamiento
 const initiateSettlementConfirmation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const groupId = parseInt(req.params.groupId, 10);

@@ -52,7 +52,9 @@ const createDebtsFromTransaction = (transaction, sharedWith, proposedBy) => __aw
     // Cargar la relación toGroup si aún no se ha cargado
     if (!transaction.toGroup) {
         const groupRepository = database_1.AppDataSource.getRepository(group_model_1.Group);
-        const group = yield groupRepository.findOneBy({ id: transaction.togroupid });
+        const group = yield groupRepository.findOneBy({
+            id: transaction.togroupid,
+        });
         if (!group) {
             throw new Error('Transaction is missing a Group reference.');
         }
@@ -61,8 +63,10 @@ const createDebtsFromTransaction = (transaction, sharedWith, proposedBy) => __aw
     const debtRepository = database_1.AppDataSource.getRepository(debt_model_1.Debt);
     const debtAmount = transaction.amount / sharedWith.length;
     // Crear deudas individuales
-    const debtsToCreate = sharedWith.map(member => {
-        if (member !== proposedBy) { // Evita crear deudas para quien propuso la transacción
+    const debtsToCreate = sharedWith
+        .map((member) => {
+        if (member !== proposedBy) {
+            // Evita crear deudas para quien propuso la transacción
             let debt = new debt_model_1.Debt();
             debt.debtor = member; // Asegúrate de que estos valores sean cadenas
             debt.creditor = proposedBy; // Asegúrate de que estos valores sean cadenas
@@ -73,9 +77,10 @@ const createDebtsFromTransaction = (transaction, sharedWith, proposedBy) => __aw
             return debt;
         }
         return null; // Si no necesitas crear una deuda, retorna null.
-    }).filter(debt => debt != null); // Filtramos los valores nulos y aseguramos el tipo.
-    // Guardar todas las deudas en la base de datos.  
-    const savedDebts = yield Promise.all(debtsToCreate.map(debt => debtRepository.save(debt)));
+    })
+        .filter((debt) => debt != null); // Filtramos los valores nulos y aseguramos el tipo.
+    // Guardar todas las deudas en la base de datos.
+    const savedDebts = yield Promise.all(debtsToCreate.map((debt) => debtRepository.save(debt)));
     // Simplificar las deudas guardadas
     const simplifiedDebts = yield (0, exports.simplifyDebts)(savedDebts);
     return { message: 'Debts created successfully from transaction.' };
@@ -92,8 +97,8 @@ const getDebtsByGroup = (groupId) => __awaiter(void 0, void 0, void 0, function*
     // Suponiendo que `group` es una relación a otra entidad
     return yield debtRepository.find({
         where: {
-            group: { id: groupId } // Asumiendo que `group` tiene un campo `id`
-        }
+            group: { id: groupId }, // Asumiendo que `group` tiene un campo `id`
+        },
     });
 });
 exports.getDebtsByGroup = getDebtsByGroup;

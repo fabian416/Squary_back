@@ -21,10 +21,12 @@ const setIo = (socketIo) => {
 };
 exports.setIo = setIo;
 const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { name, description, invitees, owner, signingMethod, selected_signers, signatureThreshold } = req.body;
+    let { name, description, invitees, owner, signingMethod, selected_signers, signatureThreshold, } = req.body;
     const walletAddresses = invitees.map((inv) => inv.walletAddress);
-    const allUsers = yield database_1.AppDataSource.manager.find(user_model_1.User, { where: { walletAddress: (0, typeorm_1.In)([owner, ...walletAddresses]) } });
-    const usersByWallet = Object.fromEntries(allUsers.map(user => [user.walletAddress, user]));
+    const allUsers = yield database_1.AppDataSource.manager.find(user_model_1.User, {
+        where: { walletAddress: (0, typeorm_1.In)([owner, ...walletAddresses]) },
+    });
+    const usersByWallet = Object.fromEntries(allUsers.map((user) => [user.walletAddress, user]));
     if (!usersByWallet[owner]) {
         return res.status(404).send({ message: "The user doesn't exist" });
     }
@@ -33,7 +35,7 @@ const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     group.name = name;
     group.description = description;
     group.owner = usersByWallet[owner];
-    // Save the goup before process the pending invitations 
+    // Save the goup before process the pending invitations
     const savedGroup = yield database_1.AppDataSource.manager.save(group_model_1.Group, group);
     for (const invitee of invitees) {
         if (usersByWallet[invitee.walletAddress]) {
@@ -47,7 +49,7 @@ const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             yield database_1.AppDataSource.manager.save(pendingInvitation_model_1.PendingInvitation, newInvitation);
         }
     }
-    group.members = [...groupMembersSet].map(wallet => usersByWallet[wallet]);
+    group.members = [...groupMembersSet].map((wallet) => usersByWallet[wallet]);
     group.signingMethod = signingMethod;
     group.selectedSigners = selected_signers;
     if (signingMethod === 'majority') {
@@ -56,26 +58,30 @@ const createGroup = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     else if (signingMethod === 'all') {
         group.signatureThreshold = selected_signers.length;
     }
-    else { // Assuming this case is 'customize'
-        if (signatureThreshold >= 1 && signatureThreshold <= selected_signers.length) {
+    else {
+        // Assuming this case is 'customize'
+        if (signatureThreshold >= 1 &&
+            signatureThreshold <= selected_signers.length) {
             group.signatureThreshold = signatureThreshold;
         }
         else {
-            return res.status(400).send({ message: "The value to signatureThreshold is incorrect" });
+            return res
+                .status(400)
+                .send({ message: 'The value to signatureThreshold is incorrect' });
         }
     }
     try {
         yield database_1.AppDataSource.manager.save(group_model_1.Group, group);
         res.status(200).send({
-            message: "Group created Succesfully",
+            message: 'Group created Succesfully',
             data: group,
-            groupId: group.id
+            groupId: group.id,
         });
     }
     catch (error) {
-        console.error("Error to save the Group:", error);
+        console.error('Error to save the Group:', error);
         res.status(500).send({
-            message: "Error to create the Group.",
+            message: 'Error to create the Group.',
         });
     }
 });
@@ -83,35 +89,43 @@ exports.createGroup = createGroup;
 const updateGnosisSafeAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { groupId, gnosissafeaddress } = req.body;
     try {
-        const group = yield database_1.AppDataSource.manager.findOne(group_model_1.Group, { where: { id: groupId } });
+        const group = yield database_1.AppDataSource.manager.findOne(group_model_1.Group, {
+            where: { id: groupId },
+        });
         if (!group) {
-            return res.status(404).send({ message: "Group not found." });
+            return res.status(404).send({ message: 'Group not found.' });
         }
         group.gnosissafeaddress = gnosissafeaddress;
         group.status = 'active';
         yield database_1.AppDataSource.manager.save(group_model_1.Group, group);
-        res.status(200).send({ message: "Gnosis Safe address updated successfully." });
+        res
+            .status(200)
+            .send({ message: 'Gnosis Safe address updated successfully.' });
     }
     catch (error) {
-        console.error("Error updating Gnosis Safe address:", error);
-        res.status(500).send({ message: "Error updating Gnosis Safe address." });
+        console.error('Error updating Gnosis Safe address:', error);
+        res.status(500).send({ message: 'Error updating Gnosis Safe address.' });
     }
 });
 exports.updateGnosisSafeAddress = updateGnosisSafeAddress;
 const getUserGroups = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("getUserGroups called with address:", req.params.address);
+    console.log('getUserGroups called with address:', req.params.address);
     const userWalletAddress = req.params.address;
     try {
         // Usamos el mismo patrón que en otras partes del código
         const groups = yield database_1.AppDataSource.manager
-            .createQueryBuilder(group_model_1.Group, "group")
-            .where("group.owner_wallet_address = :walletAddress", { walletAddress: userWalletAddress })
-            .orWhere(":walletAddress = ANY(group.selected_signers)", { walletAddress: userWalletAddress })
+            .createQueryBuilder(group_model_1.Group, 'group')
+            .where('group.owner_wallet_address = :walletAddress', {
+            walletAddress: userWalletAddress,
+        })
+            .orWhere(':walletAddress = ANY(group.selected_signers)', {
+            walletAddress: userWalletAddress,
+        })
             .getMany();
         res.status(200).send(groups);
     }
     catch (error) {
-        console.error("Error to get the Groups:", error);
+        console.error('Error to get the Groups:', error);
         res.status(500).send(error);
     }
 });
@@ -121,31 +135,38 @@ const getGroupMembers = (req, res) => __awaiter(void 0, void 0, void 0, function
     const groupId = parseInt(req.params.groupId, 10);
     // Check if groupId is a valid number after parsing
     if (isNaN(groupId)) {
-        return res.status(400).send({ message: "Invalid group ID." });
+        return res.status(400).send({ message: 'Invalid group ID.' });
     }
     try {
         // Obtienes los miembros del grupo
         const members = yield database_1.AppDataSource.manager
-            .createQueryBuilder("users", "u")
-            .innerJoin("groups", "g", "u.walletAddress = ANY(g.selected_signers)")
-            .where("g.id = :groupId", { groupId })
-            .select(["u.walletAddress", "u.alias"])
+            .createQueryBuilder('users', 'u')
+            .innerJoin('groups', 'g', 'u.walletAddress = ANY(g.selected_signers)')
+            .where('g.id = :groupId', { groupId })
+            .select(['u.walletAddress', 'u.alias'])
             .getRawMany();
         // Obtienes también la dirección Gnosis Safe del grupo
-        const group = yield database_1.AppDataSource.manager.findOne(group_model_1.Group, { where: { id: groupId } });
+        const group = yield database_1.AppDataSource.manager.findOne(group_model_1.Group, {
+            where: { id: groupId },
+        });
         if (!group) {
-            return res.status(404).send({ message: "Group not found." });
+            return res.status(404).send({ message: 'Group not found.' });
         }
-        // adapt the structure of members and add the gnosis safe 
-        const adaptedMembers = members.map(member => ({
+        // adapt the structure of members and add the gnosis safe
+        const adaptedMembers = members.map((member) => ({
             walletAddress: member.u_walletAddress,
-            alias: member.u_alias
+            alias: member.u_alias,
         }));
         //  we send the member and the gnosis address
-        res.status(200).send({ members: adaptedMembers, gnosisSafeAddress: group.gnosissafeaddress });
+        res
+            .status(200)
+            .send({
+            members: adaptedMembers,
+            gnosisSafeAddress: group.gnosissafeaddress,
+        });
     }
     catch (error) {
-        console.error("Error al obtener los miembros del grupo:", error);
+        console.error('Error al obtener los miembros del grupo:', error);
         res.status(500).send(error);
     }
 });

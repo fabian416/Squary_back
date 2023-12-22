@@ -20,7 +20,7 @@ let Group = class Group extends typeorm_1.BaseEntity {
 };
 exports.Group = Group;
 __decorate([
-    (0, typeorm_1.OneToMany)(() => debt_model_1.Debt, debt => debt.group),
+    (0, typeorm_1.OneToMany)(() => debt_model_1.Debt, (debt) => debt.group),
     __metadata("design:type", Array)
 ], Group.prototype, "debts", void 0);
 __decorate([
@@ -36,21 +36,25 @@ __decorate([
     __metadata("design:type", String)
 ], Group.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_model_1.User, user => user.groupsOwned),
+    (0, typeorm_1.ManyToOne)(() => user_model_1.User, (user) => user.groupsOwned),
     (0, typeorm_1.JoinColumn)({ name: 'owner_wallet_address' }),
     __metadata("design:type", user_model_1.User)
 ], Group.prototype, "owner", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => user_model_1.User, user => user.groups),
-    (0, typeorm_1.JoinTable)({ name: "group_members" }),
+    (0, typeorm_1.ManyToMany)(() => user_model_1.User, (user) => user.groups),
+    (0, typeorm_1.JoinTable)({ name: 'group_members' }),
     __metadata("design:type", Array)
 ], Group.prototype, "members", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, transaction => transaction.toGroup),
+    (0, typeorm_1.OneToMany)(() => transaction_model_1.Transaction, (transaction) => transaction.toGroup),
     __metadata("design:type", Array)
 ], Group.prototype, "transactions", void 0);
 __decorate([
-    (0, typeorm_1.Column)('varchar', { name: "gnosissafeaddress", unique: true, nullable: true }),
+    (0, typeorm_1.Column)('varchar', {
+        name: 'gnosissafeaddress',
+        unique: true,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], Group.prototype, "gnosissafeaddress", void 0);
 __decorate([
@@ -59,16 +63,16 @@ __decorate([
     __metadata("design:type", String)
 ], Group.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => pendingInvitation_model_1.PendingInvitation, invitation => invitation.group),
+    (0, typeorm_1.OneToMany)(() => pendingInvitation_model_1.PendingInvitation, (invitation) => invitation.group),
     __metadata("design:type", Array)
 ], Group.prototype, "pendingInvitations", void 0);
 __decorate([
-    (0, typeorm_1.Column)('varchar', { name: "signing_method", default: 'majority' }) // 'majority', 'all', 'custom'
+    (0, typeorm_1.Column)('varchar', { name: 'signing_method', default: 'majority' }) // 'majority', 'all', 'custom'
     ,
     __metadata("design:type", String)
 ], Group.prototype, "signingMethod", void 0);
 __decorate([
-    (0, typeorm_1.Column)('text', { name: "selected_signers", nullable: true, array: true }) // Save addresses 
+    (0, typeorm_1.Column)('text', { name: 'selected_signers', nullable: true, array: true }) // Save addresses
     ,
     __metadata("design:type", Array)
 ], Group.prototype, "selectedSigners", void 0);
@@ -77,7 +81,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Group.prototype, "signatureThreshold", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => transactionsConfirmations_1.TransactionConfirmation, confirmation => confirmation.group),
+    (0, typeorm_1.OneToMany)(() => transactionsConfirmations_1.TransactionConfirmation, (confirmation) => confirmation.group),
     __metadata("design:type", Array)
 ], Group.prototype, "confirmations", void 0);
 __decorate([

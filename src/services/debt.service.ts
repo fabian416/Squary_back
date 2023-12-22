@@ -1,7 +1,7 @@
 import { Debt } from '../models/debt.model';
 import { AppDataSource } from '../database';
 import { Transaction } from '../models/transaction.model';
-import { Group } from '../models/group.model'
+import { Group } from '../models/group.model';
 
 type Balances = {
   [key: string]: number;
@@ -29,12 +29,14 @@ export const simplifyDebts = async (debts: Debt[]): Promise<Debt[]> => {
         balances[debtor] += amount;
 
         if (amount > 0) {
-          simplifiedDebts.push(new Debt({
-            creditor,
-            debtor,
-            amount,
-            // Aquí deberías agregar cualquier otra propiedad necesaria
-          }));
+          simplifiedDebts.push(
+            new Debt({
+              creditor,
+              debtor,
+              amount,
+              // Aquí deberías agregar cualquier otra propiedad necesaria
+            })
+          );
         }
       }
     }
@@ -43,7 +45,11 @@ export const simplifyDebts = async (debts: Debt[]): Promise<Debt[]> => {
   return simplifiedDebts;
 };
 
-export const createDebtsFromTransaction = async (transaction: Transaction, sharedWith: string[], proposedBy: string): Promise<{ message: string }> => {
+export const createDebtsFromTransaction = async (
+  transaction: Transaction,
+  sharedWith: string[],
+  proposedBy: string
+): Promise<{ message: string }> => {
   if (!transaction || !sharedWith || sharedWith.length === 0 || !proposedBy) {
     throw new Error('Invalid parameters for creating debts.');
   }
@@ -51,38 +57,43 @@ export const createDebtsFromTransaction = async (transaction: Transaction, share
   // Cargar la relación toGroup si aún no se ha cargado
   if (!transaction.toGroup) {
     const groupRepository = AppDataSource.getRepository(Group);
-    const group = await groupRepository.findOneBy({ id: transaction.togroupid });
+    const group = await groupRepository.findOneBy({
+      id: transaction.togroupid,
+    });
     if (!group) {
       throw new Error('Transaction is missing a Group reference.');
     }
     transaction.toGroup = group; // Aquí sabemos que group no es null
   }
 
-
   const debtRepository = AppDataSource.getRepository(Debt);
   const debtAmount = transaction.amount / sharedWith.length;
 
   // Crear deudas individuales
-  const debtsToCreate: Debt[] = sharedWith.map(member => {
-    if (member !== proposedBy) { // Evita crear deudas para quien propuso la transacción
-      let debt = new Debt();
-      debt.debtor = member; // Asegúrate de que estos valores sean cadenas
-      debt.creditor = proposedBy; // Asegúrate de que estos valores sean cadenas
-      debt.amount = debtAmount;
-      debt.transaction = transaction;
-      debt.group = transaction.toGroup; // toGroup ya es válido y existente
-      debt.groupId = transaction.toGroup.id; // El ID ya es un número válido
-      return debt;
-    }
-    return null; // Si no necesitas crear una deuda, retorna null.
-  }).filter(debt => debt != null) as Debt[]; // Filtramos los valores nulos y aseguramos el tipo.
+  const debtsToCreate: Debt[] = sharedWith
+    .map((member) => {
+      if (member !== proposedBy) {
+        // Evita crear deudas para quien propuso la transacción
+        let debt = new Debt();
+        debt.debtor = member; // Asegúrate de que estos valores sean cadenas
+        debt.creditor = proposedBy; // Asegúrate de que estos valores sean cadenas
+        debt.amount = debtAmount;
+        debt.transaction = transaction;
+        debt.group = transaction.toGroup; // toGroup ya es válido y existente
+        debt.groupId = transaction.toGroup.id; // El ID ya es un número válido
+        return debt;
+      }
+      return null; // Si no necesitas crear una deuda, retorna null.
+    })
+    .filter((debt) => debt != null) as Debt[]; // Filtramos los valores nulos y aseguramos el tipo.
 
-  // Guardar todas las deudas en la base de datos.  
-  const savedDebts = await Promise.all(debtsToCreate.map(debt => debtRepository.save(debt)));
+  // Guardar todas las deudas en la base de datos.
+  const savedDebts = await Promise.all(
+    debtsToCreate.map((debt) => debtRepository.save(debt))
+  );
 
   // Simplificar las deudas guardadas
   const simplifiedDebts = await simplifyDebts(savedDebts);
-
 
   return { message: 'Debts created successfully from transaction.' };
 };
@@ -96,14 +107,16 @@ export const createDebt = async (debtInfo: any): Promise<Debt> => {
 export const getDebtsByGroup = async (groupId: number): Promise<Debt[]> => {
   const debtRepository = AppDataSource.getRepository(Debt);
   // Suponiendo que `group` es una relación a otra entidad
-  return await debtRepository.find({ 
-    where: { 
-      group: { id: groupId } // Asumiendo que `group` tiene un campo `id`
-    } 
+  return await debtRepository.find({
+    where: {
+      group: { id: groupId }, // Asumiendo que `group` tiene un campo `id`
+    },
   });
 };
 
-export const settleDebts = async (groupId: number): Promise<{ message: string }> => {
+export const settleDebts = async (
+  groupId: number
+): Promise<{ message: string }> => {
   if (!groupId) {
     throw new Error('Group ID is required.');
   }

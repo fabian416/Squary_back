@@ -18,12 +18,12 @@ let Transaction = class Transaction extends typeorm_1.BaseEntity {
 };
 exports.Transaction = Transaction;
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, group => group.transactions),
+    (0, typeorm_1.ManyToOne)(() => group_model_1.Group, (group) => group.transactions),
     (0, typeorm_1.JoinColumn)({ name: 'togroupid' }),
     __metadata("design:type", group_model_1.Group)
 ], Transaction.prototype, "toGroup", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)('int'),
     __metadata("design:type", Number)
 ], Transaction.prototype, "togroupid", void 0);
 __decorate([
@@ -39,8 +39,8 @@ __decorate([
     __metadata("design:type", String)
 ], Transaction.prototype, "proposedby", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => user_model_1.User, user => user.signedTransactions),
-    (0, typeorm_1.JoinTable)({ name: "transaction_signers" }),
+    (0, typeorm_1.ManyToMany)(() => user_model_1.User, (user) => user.signedTransactions),
+    (0, typeorm_1.JoinTable)({ name: 'transaction_signers' }),
     __metadata("design:type", Array)
 ], Transaction.prototype, "signers", void 0);
 __decorate([
@@ -80,7 +80,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Transaction.prototype, "includedInSettlement", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => debt_model_1.Debt, debt => debt.transaction),
+    (0, typeorm_1.OneToMany)(() => debt_model_1.Debt, (debt) => debt.transaction),
     __metadata("design:type", Array)
 ], Transaction.prototype, "debts", void 0);
 exports.Transaction = Transaction = __decorate([
