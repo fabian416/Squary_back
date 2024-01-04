@@ -109,4 +109,5 @@ For the complete functionality of Squary, you should also set up and run the [Sq
 [instrucciones para contribuir al proyecto]
 
 ## License
-[información sobre la licencia del proyecto]
+
+This project is licensed under the MIT License - 
